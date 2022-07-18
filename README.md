@@ -1,6 +1,6 @@
 # udemy_flutter_course
 
-A new Flutter project.
+A new Flutter project. Its a follow through of Udemy Flutter Course Step by Step.. 
 
 ## Getting Started
 
