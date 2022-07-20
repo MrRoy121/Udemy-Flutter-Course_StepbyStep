@@ -1,79 +1,122 @@
 import 'package:flutter/material.dart';
-import 'package:udemy_flutter_course/result.dart';
+import 'model/transaction.dart';
+import 'widgets/chart.dart';
+import 'widgets/newTransaction.dart';
+import 'widgets/transaction_list.dart';
 
+void main() => runApp(MyApp());
 
-import 'answer.dart';
-
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   @override
-  State<StatefulWidget> createState() {
-    return _MyAppState();
-  }
-}
-
-class _MyAppState extends State<MyApp> {
-  final _question = const [
-    {
-      'question': "What's is your favourite color?",
-      'answer': [
-        {'text': 'Red', 'score': 10},
-        {'text': 'Green', 'score': 2},
-        {'text': 'Blue', 'score': 6},
-        {'text': 'Pink', 'score': 4}
-      ]
-    },
-    {
-      'question': "What's is your favourite animal?",
-      'answer': [
-        {'text': 'Dog', 'score': 4},
-        {'text': 'Cat', 'score': 6},
-        {'text': 'Fish', 'score': 10},
-        {'text': 'Tiger', 'score': 10}
-      ]
-    },
-    {
-      'question': "What's is your favourite Item?",
-      'answer': [
-        {'text': 'Mobile', 'score': 2},
-        {'text': 'Tab', 'score': 10},
-        {'text': 'Laptop', 'score': 8},
-        {'text': 'Computer', 'score': 4}
-      ]
-    }
-  ];
-  var _questionIndex = 0;
-  var _totalScore = 0;
-
-  void _resetQuiz(){
-    setState((){
-      _questionIndex = 0;
-      _totalScore = 0;
-    });
-  }
-  void _answerQuestion(int score) {
-    _totalScore += score;
-    setState(() {
-      _questionIndex += 1;
-    });
-  }
-
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: Text("App Bar"),
-        ),
-        body: _questionIndex < _question.length
-            ? Quiz(
-                questionIndex: _questionIndex,
-                answerQuestion: _answerQuestion,
-                question: _question,
+      title: 'Expenses',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primarySwatch: Colors.amber,
+        fontFamily: "Quicksand",
+        appBarTheme: AppBarTheme(
+          toolbarTextStyle: ThemeData.light()
+              .textTheme
+              .copyWith(
+                headline6: TextStyle(
+                    fontFamily: 'OpenSans',
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold),
               )
-            : Result(_totalScore, _resetQuiz),
+              .bodyText2,
+          titleTextStyle: ThemeData.light()
+              .textTheme
+              .copyWith(
+                headline6: TextStyle(
+                    fontFamily: 'OpenSans',
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold),
+              )
+              .headline6,
+        ),
+      ),
+      home: MyHomePage(),
+    );
+  }
+}
+
+class MyHomePage extends StatefulWidget {
+  @override
+  _MyHomePageState createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  final List<Transaction> _transaction = [
+    //Transaction(id: "i1", title: "Biscuit", amount: 9.88, date: DateTime.now()),
+    //Transaction(id: "i2", title: "Mango", amount: 5.58, date: DateTime.now()),
+  ];
+
+  void _addTransaction(String title, double amount, DateTime date) {
+    setState(() {
+      _transaction.add(new Transaction(
+          id: DateTime.now().toString(),
+          title: title,
+          amount: amount,
+          date: date));
+    });
+  }
+
+  void _deleteTransaction(String id) {
+    setState(() {
+      _transaction.removeWhere((element) => element.id == id);
+    });
+  }
+
+  void _addTransactionWindow(BuildContext ctx) {
+    showModalBottomSheet(
+      context: ctx,
+      builder: (bcx) {
+        return GestureDetector(
+          onTap: () {},
+          child: NewTransaction(_addTransaction),
+          behavior: HitTestBehavior.opaque,
+        );
+      },
+    );
+  }
+
+  List<Transaction> get _recentTransaction {
+    return _transaction.where((tx) {
+      return tx.date.isAfter(DateTime.now().subtract(Duration(days: 7)));
+    }).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        actions: [
+          IconButton(
+            icon: Icon(Icons.add),
+            onPressed: () => _addTransactionWindow(context),
+          ),
+        ],
+        title: Text(
+          "Expenses",
+          style: TextStyle(color: Colors.black),
+        ),
+      ),
+      body: Column(
+        //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            width: double.infinity,
+            child: Chart(_recentTransaction),
+          ),
+          TransactionList(_transaction, _deleteTransaction),
+        ],
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add),
+        onPressed: () => _addTransactionWindow(context),
       ),
     );
   }
